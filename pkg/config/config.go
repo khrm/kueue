@@ -38,8 +38,6 @@ func fromFile(path string, scheme *runtime.Scheme, cfg *configapi.Configuration)
 		return err
 	}
 
-	ctrl.Log.WithName("config").Info("Raw configuration file content", "content", string(content))
-
 	codecs := serializer.NewCodecFactory(scheme, serializer.EnableStrict)
 
 	// Regardless of if the bytes are of any external version,
