@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"flag"
 	"fmt"
 	"net/http"
@@ -357,7 +356,7 @@ func setupControllers(ctx context.Context, mgr ctrl.Manager, cCache *schdcache.C
 				setupLog.Error(err, "Could not load generic adapter configurations")
 				os.Exit(1)
 			}
-			setupLog.Info("inside generic creation")
+			setupLog.Info("Creating generic adapters")
 
 			// Add generic adapters to the adapters map
 			for _, adapter := range genericConfigManager.GetAllAdapters() {
