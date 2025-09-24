@@ -38,6 +38,7 @@ import (
 
 	configapi "sigs.k8s.io/kueue/apis/config/v1beta1"
 	"sigs.k8s.io/kueue/pkg/controller/jobframework"
+	"sigs.k8s.io/kueue/pkg/controller/admissionchecks/multikueue/externalframeworks"
 	podworkload "sigs.k8s.io/kueue/pkg/controller/jobs/pod"
 	"sigs.k8s.io/kueue/pkg/features"
 	stringsutils "sigs.k8s.io/kueue/pkg/util/strings"
@@ -111,6 +112,41 @@ func validateMultiKueue(c *configapi.Configuration) field.ErrorList {
 		if c.MultiKueue.Origin != nil {
 			if errs := apimachineryutilvalidation.IsValidLabelValue(*c.MultiKueue.Origin); len(errs) != 0 {
 				allErrs = append(allErrs, field.Invalid(multiKueuePath.Child("origin"), *c.MultiKueue.Origin, strings.Join(errs, ",")))
+			}
+		}
+
+		if len(c.MultiKueue.ExternalFrameworks) > 0 {
+			path := multiKueuePath.Child("externalFrameworks")
+			if !features.Enabled(features.MultiKueueAdaptersForCustomJobs) {
+				allErrs = append(allErrs, field.Forbidden(path, "can be set only when MultiKueueAdaptersForCustomJobs feature gate is enabled"))
+			} else {
+				builtInAdapters, err := jobframework.GetMultiKueueAdapters(sets.New(c.Integrations.Frameworks...))
+				if err != nil {
+					allErrs = append(allErrs, field.InternalError(path, err))
+				}
+				builtInGVKs := sets.New[string]()
+				for gvk := range builtInAdapters {
+					builtInGVKs.Insert(gvk)
+				}
+
+				seenGVKs := sets.New[string]()
+				for i, f := range c.MultiKueue.ExternalFrameworks {
+					fldPath := path.Index(i).Child("name")
+					parsedGVK, _ := schema.ParseKindArg(f.Name)
+					if parsedGVK == nil {
+						allErrs = append(allErrs, field.Invalid(fldPath, f.Name, "must be in 'Kind.version.group' format"))
+						continue
+					}
+					gvk := parsedGVK.String()
+					if seenGVKs.Has(gvk) {
+						allErrs = append(allErrs, field.Duplicate(fldPath, f.Name))
+					} else {
+						seenGVKs.Insert(gvk)
+					}
+					if builtInGVKs.Has(gvk) {
+						allErrs = append(allErrs, field.Invalid(fldPath, f.Name, "conflicts with a built-in MultiKueue adapter"))
+					}
+				}
 			}
 		}
 	}
