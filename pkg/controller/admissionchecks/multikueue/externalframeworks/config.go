@@ -31,7 +31,9 @@ var (
 	adapters []*Adapter
 )
 
-// Initialize loads and validates external framework configurations and creates adapters.
+// Initialize loads the provided external framework configurations, validates them, and constructs adapters for each unique GroupVersionKind (GVK).
+// It returns an aggregated error containing parse or duplicate-configuration errors when validation fails. On success, the package-level `adapters` slice
+// is populated with an Adapter for each configured GVK.
 func Initialize(configs []configapi.MultiKueueExternalFramework) error {
 	adapters = nil // Reset on re-initialization
 	configsMap := make(map[schema.GroupVersionKind]configapi.MultiKueueExternalFramework)
@@ -62,12 +64,14 @@ func Initialize(configs []configapi.MultiKueueExternalFramework) error {
 	return nil
 }
 
-// GetAllAdapters returns all configured adapters.
+// GetAllAdapters returns the current list of configured adapters.
+// The returned slice reflects the adapters populated by Initialize.
 func GetAllAdapters() []*Adapter {
 	return adapters
 }
 
-// parseGVK parses a string to a GVK
+// parseGVK parses name into a schema.GroupVersionKind.
+// It returns an error if name is empty or if the string is not a valid GVK representation.
 func parseGVK(name string) (*schema.GroupVersionKind, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
