@@ -98,6 +98,14 @@ func validateInternalCertManagement(c *configapi.Configuration) field.ErrorList 
 	return allErrs
 }
 
+// validateMultiKueue validates the MultiKueue section of the configuration.
+// It checks that GCInterval and WorkerLostTimeout (when set) are not negative,
+// that Origin (when set) is a valid label value, and that ExternalFrameworks
+// (when present) is permitted by the MultiKueueAdaptersForCustomJobs feature
+// gate. For each external framework it requires the name to be in
+// "Kind.version.group" format, reports duplicate entries, and reports conflicts
+// with built-in MultiKueue adapters. It returns a field.ErrorList containing
+// all discovered validation errors.
 func validateMultiKueue(c *configapi.Configuration) field.ErrorList {
 	var allErrs field.ErrorList
 	if c.MultiKueue != nil {
