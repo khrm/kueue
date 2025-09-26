@@ -78,7 +78,7 @@ func (a *Adapter) SyncJob(ctx context.Context, localClient client.Client, remote
 	}
 
 	// Update existing remote object status
-	return a.syncStatus(ctx, localClient, remoteClient, localObj, remoteObj)
+	return a.syncStatus(ctx, localClient, localObj, remoteObj)
 }
 
 func (a *Adapter) createRemoteObject(ctx context.Context, remoteClient client.Client, localObj *unstructured.Unstructured, workloadName, origin string) error {
@@ -105,7 +105,7 @@ func (a *Adapter) createRemoteObject(ctx context.Context, remoteClient client.Cl
 	return remoteClient.Create(ctx, remoteObj)
 }
 
-func (a *Adapter) syncStatus(ctx context.Context, localClient client.Client, remoteClient client.Client, localObj, remoteObj *unstructured.Unstructured) error {
+func (a *Adapter) syncStatus(ctx context.Context, localClient client.Client, localObj, remoteObj *unstructured.Unstructured) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	// Create a deep copy of the original object to calculate the patch against.
@@ -186,6 +186,7 @@ func (a *Adapter) IsJobManagedByKueue(ctx context.Context, c client.Client, key 
 	return true, "", nil
 }
 
+// GVK returns the GroupVersionKind for this adapter.
 func (a *Adapter) GVK() schema.GroupVersionKind {
 	return a.gvk
 }
