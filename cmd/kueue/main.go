@@ -323,6 +323,13 @@ func setupIndexes(ctx context.Context, mgr ctrl.Manager, cfg *configapi.Configur
 	return jobframework.SetupIndexes(ctx, mgr.GetFieldIndexer(), opts...)
 }
 
+// setupControllers sets up and registers the controller and webhook components required by the manager.
+// 
+// It waits for webhook certificates to be ready and then installs core controllers, optional provisioning
+// admission controller, Multikueue controllers (including optional external framework adapters), Topology
+// Aware Scheduling controllers, webhooks, and job framework controllers according to the provided
+// configuration and server version fetcher. Returns an error if any controller or webhook fails to be
+// created or registered.
 func setupControllers(ctx context.Context, mgr ctrl.Manager, cCache *schdcache.Cache, queues *qcache.Manager, certsReady chan struct{}, cfg *configapi.Configuration, serverVersionFetcher *kubeversion.ServerVersionFetcher) error {
 	// The controllers won't work until the webhooks are operating, and the webhook won't work until the
 	// certs are all in place.

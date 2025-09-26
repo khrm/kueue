@@ -26,7 +26,7 @@ import (
 	configapi "sigs.k8s.io/kueue/apis/config/v1beta1"
 )
 
-// NewAdapters creates and returns adapters from the given configurations.
+// configuration is invalid or duplicated, it returns an aggregated error.
 func NewAdapters(configs []configapi.MultiKueueExternalFramework) ([]*Adapter, error) {
 	configsMap := make(map[schema.GroupVersionKind]configapi.MultiKueueExternalFramework)
 	var errs []error
